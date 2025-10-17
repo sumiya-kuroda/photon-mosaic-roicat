@@ -52,15 +52,20 @@ def test_write(message=None):
             "Hello World!\nHello People!"
             "\n<https://github.com/sumiya-kuroda/photon-mosaic-roicat|GitHub>"
         )
+    notify_slack(message)
 
+def notify_slack(msg=None, channel_id=None):
+    if msg is None:
+        raise ValueError('Specify message!')
+    
     configs = load_and_process_config()
     client = get_slack_client(configs=configs)
-
-    print("Sending test message ...")
+    if channel_id is None:
+        channel_id = configs["channel_id"]
+    print("Sending notification to Slack ...")
     client.chat_postMessage(
-        channel=configs["channel_id"], text=message, unfurl_links=False
+        channel=channel_id, text=msg, unfurl_links=False
     )
-
 
 # upload_and_then_share_file = client.files_upload_v2(
 #     channel="C123456789",
