@@ -1,0 +1,191 @@
+# ============================================================================
+# Data Paths Configuration
+# ============================================================================
+# Base directories for processed data by photon-mosaic
+processed_data_base: "path/to/processed/data/"
+
+# ============================================================================
+# ROICaT Configuration
+# ============================================================================
+# Parameters for ROICaT processing pipeline
+general:
+  use_GPU: true
+  verbose: true
+  random_seed: null
+
+data_loading:
+  data_kind: data_suite2p
+  dir_outer: null
+  reMatch_in_path: null
+  common:
+    um_per_pixel: 1.3523
+    centroid_method: centerOfMass
+    out_height_width: [36, 36]
+  data_suite2p:
+    new_or_old_suite2p: new
+    type_meanImg: meanImgE
+  data_roicat:
+    filename_search: data_roicat.richfile
+
+alignment:
+  initialization:
+    use_match_search: true
+    all_to_all: false
+    radius_in: 4.0
+    radius_out: 20.0
+    z_threshold: 4.0
+  augment:
+    normalize_FOV_intensities: true
+    roi_FOV_mixing_factor: 0.5
+    use_CLAHE: true
+    CLAHE_grid_block_size: 10
+    CLAHE_clipLimit: 1.0
+    CLAHE_normalize: true
+  fit_geometric:
+    template: 0.5
+    template_method: sequential
+    mask_borders: [0, 0, 0, 0]
+    method: DISK_LightGlue
+    kwargs_method:
+      RoMa:
+        model_type: outdoor
+        n_points: 10000
+        batch_size: 1000
+      DISK_LightGlue:
+        num_features: 3000
+        threshold_confidence: 0
+        window_nms: 7
+      LoFTR:
+        model_type: indoor_new
+        threshold_confidence: 0.2
+      ECC_cv2:
+        mode_transform: euclidean
+        n_iter: 200
+        termination_eps: 1.0e-09
+        gaussFiltSize: 1
+        auto_fix_gaussFilt_step: 10
+      PhaseCorrelation:
+        bandpass_freqs: [1, 30]
+        order: 5
+      SIFT:
+        nfeatures: 10000
+        contrastThreshold: 0.04
+        edgeThreshold: 10
+        sigma: 1.6
+      ORB:
+        nfeatures: 1000
+        scaleFactor: 1.2
+        nlevels: 8
+        edgeThreshold: 31
+        firstLevel: 0
+        WTA_K: 2
+        scoreType: 0
+        patchSize: 31
+        fastThreshold: 20
+      NullRegistration: {}
+    constraint: affine
+    kwargs_RANSAC:
+      inl_thresh: 3.0
+      max_iter: 100
+      confidence: 0.99
+  fit_nonrigid:
+    template: 0.5
+    template_method: image
+    method: DeepFlow
+    kwargs_method:
+      RoMa:
+        model_type: outdoor
+      DeepFlow: {}
+      OpticalFlowFarneback:
+        pyr_scale: 0.7
+        levels: 5
+        winsize: 128
+        iterations: 15
+        poly_n: 5
+        poly_sigma: 1.5
+      NullRegistration: {}
+  transform_ROIs:
+    normalize: true
+
+blurring:
+  kernel_halfWidth: 4
+
+ROInet:
+  network:
+    download_method: check_local_first
+    download_url: https://osf.io/x3fd2/download
+    download_hash: 7a5fb8ad94b110037785a46b9463ea94
+    forward_pass_version: latent
+  dataloader:
+    jit_script_transforms: false
+    batchSize_dataloader: 8
+    pinMemory_dataloader: true
+    numWorkers_dataloader: -1
+    persistentWorkers_dataloader: true
+    prefetchFactor_dataloader: 2
+
+SWT:
+  kwargs_Scattering2D:
+    J: 2
+    L: 12
+  batch_size: 100
+
+similarity_graph:
+  sparsification:
+    n_workers: -1
+    block_height: "128_tree"
+
+clustering:
+  mixing_method: automatic
+  parameters_automatic_mixing:
+    n_bins: null
+    smoothing_window_bins: null
+    kwargs_findParameters:
+      n_patience: 300
+      tol_frac: 0.001
+      max_trials: 1200
+      max_duration: 600
+    bounds_findParameters:
+      power_NN: [0.0, 2.0]
+      power_SWT: [0.0, 2.0]
+      p_norm: [-5, -0.1]
+      sig_NN_kwargs_mu: [0.0, 1.0]
+      sig_NN_kwargs_b: [0.1, 1.5]
+      sig_SWT_kwargs_mu: [0.0, 1.0]
+      sig_SWT_kwargs_b: [0.1, 1.5]
+    n_jobs_findParameters: -1
+  parameters_manual_mixing:
+    power_SF: 1.0
+    power_NN: 0.5
+    power_SWT: 0.5
+    p_norm: -1.0
+    sig_SF_kwargs: null
+    sig_NN_kwargs:
+      mu: 0.5
+      b: 1.0
+    sig_SWT_kwargs:
+      mu: 0.5
+      b: 1.0
+  pruning:
+    d_cutoff: null
+    stringency: 1.0
+    convert_to_probability: false
+  cluster_method:
+    method: automatic
+    n_sessions_switch: 6
+  hdbscan:
+    min_cluster_size: 2
+    n_iter_violationCorrection: 6
+    split_intraSession_clusters: true
+    cluster_selection_method: leaf
+    d_clusterMerge: null
+    alpha: 0.999
+    discard_failed_pruning: true
+    n_steps_clusterSplit: 100
+  sequential_hungarian:
+    thresh_cost: 0.6
+
+results_saving:
+  dir_save: null # Keep empty
+  prefix_name_save: "Sumiya"
+  gif_frame_rate: 10.0
