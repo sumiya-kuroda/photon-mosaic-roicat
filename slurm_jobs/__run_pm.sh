@@ -3,6 +3,6 @@ echo "SLURM job info:"
 scontrol show job $SLURM_JOB_ID
 
 module load miniconda
-conda activate photon-mosaic
+conda activate photon-mosaic-dev
 
-PYTHONUNBUFFERED=1 photon-mosaic --jobs 10 --rerun-incomplete
+photon-mosaic --jobs 10 --rerun-incomplete

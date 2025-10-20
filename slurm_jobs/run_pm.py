@@ -1,9 +1,10 @@
-import submitit
 import time
+import submitit
+from submitit.helpers import CommandFunction
 
 def run_pm():
     # Run photon-mosaic
-    executor_pm = submitit.AutoExecutor(folder="./")
+    executor_pm = submitit.AutoExecutor(folder="./submitit")
     executor_pm.update_parameters(
         slurm_partition="cpu",
         slurm_job_name="pm",
@@ -11,8 +12,10 @@ def run_pm():
         mem_gb=4
     )
 
-    job_pm = executor_pm.submit("bash __run_pm.sh")
+    job_pm = executor_pm.submit(CommandFunction(["photon-mosaic", "--jobs", "10", "--rerun-incomplete"])) # no space!
+    # job_pm = executor_pm.submit("bash __run_pm.sh") #TODO: call via Python (not implemented)
     print("Submitted job_id:", job_pm.job_id)
+    wait_and_notify(job_pm)
 
 
 def wait_and_notify(job: submitit.Job, interval=30):

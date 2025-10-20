@@ -12,7 +12,9 @@ source /etc/profile.d/modules.sh
 echo "SLURM job info:"
 scontrol show job $SLURM_JOB_ID
 
-module load miniconda
-conda activate photon-mosaic
+export PYTHONUNBUFFERED=1
 
-PYTHONUNBUFFERED=1 photon-mosaic --jobs 10 --rerun-incomplete
+module load miniconda
+conda activate photon-mosaic-dev
+
+srun python ./run_pm.py
