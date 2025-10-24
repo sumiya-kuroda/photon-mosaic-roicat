@@ -5,7 +5,7 @@ from photon_mosaic_roicat.notification import slack_bot
 from photon_mosaic_roicat.slurm_helper import monitor_pm_and_notify
 def run_pm():
     # Run photon-mosaic
-    executor_pm = submitit.AutoExecutor(folder="./submitit")
+    executor_pm = submitit.AutoExecutor(folder="../.submitit")
     executor_pm.update_parameters(
         slurm_partition="cpu",
         slurm_job_name="pm",
