@@ -14,6 +14,9 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 # notification
 pip install git+https://github.com/neuroinformatics-unit/swc-slack # it works well with any Slack
 
+# Install others
+pip install submitit
+
 # Install this module
 pip install -e.
 ```
@@ -22,11 +25,13 @@ pip install -e.
 
 When running only photon-mosaic
 ```sh
+cd slurm_jobs
 sbatch run_pm.sh
 ```
 
 When running photon-mosaic + ROICaT
 ```sh
+cd slurm_jobs
 sbatch run_pm_roicat.sh
 ```
 
