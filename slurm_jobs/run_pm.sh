@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=pm
+#SBATCH --job-name=submitit
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks=1
 #SBATCH --time=72:00:00
