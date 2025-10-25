@@ -13,10 +13,12 @@ def run_pm():
         mem_gb=4
     )
 
-    job_pm = executor_pm.submit(CommandFunction(["photon-mosaic", "--jobs", "3", "--latency-wait", "30"])) # no space!
-    # job_pm = executor_pm.submit("bash __run_pm.sh") #TODO: call via Python (not implemented)
+    job_pm = executor_pm.submit(CommandFunction(["photon-mosaic", "--jobs", "15", "--latency-wait", "30", "--rerun-incomplete"])) # no space!
+    #TODO: call via Python (not implemented)
     print("Submitted job_id:", job_pm.job_id)
     monitor_pm_and_notify(job_pm)
+
+    return job_pm
 
 if __name__ == '__main__':
     run_pm()
