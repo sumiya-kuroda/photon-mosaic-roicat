@@ -1,9 +1,9 @@
 # photon-mosaic-roicat
-This is an enxtension for [photon-mosaic](https://github.com/neuroinformatics-unit/photon-mosaic), which also adds support for [ROICaT](https://github.com/RichieHakim/ROICaT). This repository is designed and initiated by Athina Apostolelli.
+This is an enxtension for [photon-mosaic](https://github.com/neuroinformatics-unit/photon-mosaic), which also adds support for [ROICaT](https://github.com/RichieHakim/ROICaT). This repository is heavily adapted from prior work by [Athina Apostolelli **@AthinaApostolelli**](https://www.sainsburywellcome.org/web/people/athina-apostolelli).
 
 ## Getting started
 ```sh
-conda activate photon-mosaic-dev # We will use the same env
+conda activate photon-mosaic-dev # We will use the same env as photon-mosaic
 
 # ROICaT
 pip install roicat[all]
@@ -14,10 +14,8 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 # notification
 pip install git+https://github.com/neuroinformatics-unit/swc-slack # it works well with any Slack
 
-# Install others
+# Install other dependencies
 pip install submitit
-
-# Install this module
 pip install -e.
 ```
 
