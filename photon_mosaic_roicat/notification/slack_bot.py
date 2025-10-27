@@ -67,14 +67,22 @@ def notify_slack(msg=None, channel_id=None):
         channel=channel_id, text=msg, unfurl_links=False
     )
 
-# upload_and_then_share_file = client.files_upload_v2(
-#     channel="C123456789",
-#     title="Test text data",
-#     filename="test.txt",
-#     content="Hi there! This is a text file!",
-#     initial_comment="Here is the file:",
-# )
-
+def notify_slack_with_file(msg=None, filepath=None, channel_id=None):
+    if msg is None:
+        raise ValueError('Specify message!')
+    if filepath is None:
+        raise ValueError('Specify file!')  
+    configs = load_and_process_config()
+    client = get_slack_client(configs=configs)
+    if channel_id is None:
+        channel_id = configs["channel_id"]
+    print("Sending notification to Slack ...")
+    client.files_upload_v2(
+        channel=channel_id,
+        file=filepath,
+        filename=os.path.basename(filepath),
+        initial_comment=msg
+    )
 
 if __name__ == '__main__':
     test_write()

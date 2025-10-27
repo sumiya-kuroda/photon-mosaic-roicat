@@ -1,14 +1,10 @@
 from pathlib import Path
-import re, os, sys
+import re, os
 import numpy as np
 import matplotlib.pyplot as plt
-import roicat
 import scipy.sparse
-import importlib
-importlib.reload(roicat)
 
 from IPython.display import HTML, display
-import numpy as np
 import base64
 from PIL import Image
 from io import BytesIO
@@ -16,9 +12,9 @@ import torch
 import datetime
 import hashlib
 
-from roicat import pipelines, util, helpers, data_importing
+from roicat import pipelines, util, helpers, data_importing, visualization
 from photon_mosaic_roicat.notification import slack_bot
-from photon_mosaic_roicat.roicat_helpers import io, tracking_helpers
+from photon_mosaic_roicat.roicat_helpers import io, tracking_helpers, generate_report
 
 PIPELINES = {
     'tracking': pipelines.pipeline_tracking,
@@ -64,18 +60,27 @@ def run_roicat_with_monitoring(
     inplace_update_if_not_none(params['data_loading'], 'dir_outer', dir_data)
     inplace_update_if_not_none(params['results_saving'], 'dir_save', dir_save)
 
+    # try:
     if params['data_loading']['data_kind'] == 'data_VRABCD':
         custom_data = load_VRABCD(params)
         # inplace_update_if_not_none(params['results_saving'], 'dir_save', 'data_suite2p') # because we use suite2p
         results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=custom_data) # Run pipeline
     else:
         results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=None) # Run pipeline
-
-    # When the job is done, send notification to Slack
     msg = f"✅ ROICaT job for subject {subject} completed successfully!"
-    print(results)
-    print(msg)
-    slack_bot.notify_slack(msg)
+
+    # Generate PDF report
+    is_pdfmade = generate_report.generate_roicat_report(dir_save)
+    # except Exception as e:
+    #     msg = f"❌ ROICaT job for subject {subject} failed. Error message: {e}"
+    #     is_pdfmade = False
+
+    # print(msg)
+    # slack_bot.notify_slack(msg)
+    # if is_pdfmade:
+    #     slack_bot.notify_slack_with_file(msg, path_to_pdf, is_pdfmade)
+    # else:
+    #     slack_bot.notify_slack(msg)
 
 def load_VRABCD(params: dict):
     # this function load data from VR ABCD project
@@ -114,6 +119,26 @@ def load_VRABCD(params: dict):
 
     return data
 
+def generate_roicat_FOVs(results_all: dict):
+    FOV_clusters = visualization.compute_colored_FOV(
+        spatialFootprints=[r.power(1.0) for r in results_all['ROIs']['ROIs_aligned']],  ## Spatial footprint sparse arrays
+        FOV_height=results_all['ROIs']['frame_height'],
+        FOV_width=results_all['ROIs']['frame_width'],
+        labels=results_all["clusters"]["labels_bySession"],
+    )
+
+    return [(f * 255).astype(np.uint8) for f in FOV_clusters]
+    # helpers.save_gif(
+    #     array=helpers.add_text_to_images(
+    #         images=[(f * 255).astype(np.uint8) for f in FOV_clusters], 
+    #         text=[[f"{ii}",] for ii in range(len(FOV_clusters))], 
+    #         font_size=3,
+    #         line_width=10,
+    #         position=(30, 90),
+    #     ), 
+
+
+# Left over from Athina's repo
 def load_neural_data(basepath, animal, sessions_to_align, data_type='F'):
     # Load neural data 
     data = [[] for s in range(len(sessions_to_align))]
@@ -130,21 +155,6 @@ def load_neural_data(basepath, animal, sessions_to_align, data_type='F'):
         data[s] = np.load(datapath)
 
     return data
-
-
-def delete_mac_hidden_files(folder_path):
-    folder = Path(folder_path)
-    # Patterns to match macOS hidden files
-    hidden_files = ['.DS_Store', '._.DS_Store']
-
-    # Recursively find and delete those files
-    for hidden_file in hidden_files:
-        for file_path in folder.rglob(hidden_file):
-            try:
-                file_path.unlink()  # Delete the file
-                print(f"Deleted: {file_path}")
-            except Exception as e:
-                print(f"Could not delete {file_path}: {e}")
 
 
 def load_roicat_results(roicat_dir, roicat_data_name):
