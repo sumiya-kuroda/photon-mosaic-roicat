@@ -16,15 +16,60 @@ import torch
 import datetime
 import hashlib
 
-def constuct_roicat_params(subject:str = '', config=None):
+from roicat import pipelines, util, helpers
+from photon_mosaic_roicat.slurm_helper import monitor_roicat_and_notify
+from photon_mosaic_roicat.notification import slack_bot
+
+PIPELINES = {
+    'tracking': pipelines.pipeline_tracking,
+}
+
+def constuct_roicat_params(config=None, subject:str = ''):
     if config is not None:
         processed_data_base = Path(config["processed_data_base"]).resolve()
 
     dir_data = processed_data_base / subject
-    dir_save = dir_data / 'funcimg_tracking'
+    dir_save = dir_data / 'funcimg_tracked'
+    dir_save.mkdir(parents=True, exist_ok=True)
 
     return dir_data, dir_save
 
+def run_roicat_with_monitoring(
+    pipeline_name: str = 'tracking',
+    path_params: str = '',
+    dir_data: str = '',
+    dir_save: str = ''
+):
+    """
+    Call a pipeline with the specified parameters.
+    """
+
+    # Load in parameters to use
+    if path_params is not None:
+        params = helpers.yaml_load(path_params)
+        params.pop("processed_data_base", None)
+    else:
+        print(f"WARNING: No parameters file specified. Using default parameters for pipeline '{pipeline_name}'")
+        params = {}
+
+    # These lines are for safety, to make sure that all params are present and valid
+    params_defaults = util.get_default_parameters(pipeline=pipeline_name)
+    params = helpers.prepare_params(params=params, defaults=params_defaults)
+
+    # User specified directories
+    def inplace_update_if_not_none(d, key, value):
+        if value is not None:
+            d[key] = value
+    inplace_update_if_not_none(params['data_loading'], 'dir_outer', dir_data)
+    inplace_update_if_not_none(params['results_saving'], 'dir_save', dir_save)
+    # inplace_update_if_not_none(params['results_saving'], 'prefix_name_save', prefix_name_save)
+    # inplace_update_if_not_none(params['general'], 'verbose', verbose)
+
+    # Run pipeline
+    results, run_data, params = PIPELINES[pipeline_name](params=params)
+
+    # When the job is done, send notification to Slack
+    # monitor_roicat_and_notify
 
 def load_neural_data(basepath, animal, sessions_to_align, data_type='F'):
     # Load neural data 
@@ -32,9 +77,9 @@ def load_neural_data(basepath, animal, sessions_to_align, data_type='F'):
     for s, sess in enumerate(sessions_to_align):
         print(f'Loading neural data for session {sess}')
         if data_type == 'F':
-            datapath = basepath / animal / sess / 'funcimg' / 'Session' / 'suite2p' / 'plane0' / 'F.npy'
+            datapath = basepath / animal / sess / 'funcimg' / 'suite2p' / 'plane0' / 'F.npy'
         elif data_type == 'DF_F0':
-            datapath = basepath / animal / sess / 'funcimg' / 'Session' / 'suite2p' / 'plane0' / 'DF_F0.npy'
+            datapath = basepath / animal / sess / 'funcimg' / 'suite2p' / 'plane0' / 'DF_F0.npy'
             if not os.path.exists(datapath):
                 raise FileNotFoundError('The DF_F0.npy file does not exist in this directory.')
         else:
@@ -73,7 +118,7 @@ def get_neuron_count(basepath, animal, sessions_to_align):
     num_neurons = np.zeros(len(sessions_to_align))
     for s, sess in enumerate(sessions_to_align):
         print(f'Loading iscell data for session {sess}')
-        datapath = basepath / animal / sess / 'funcimg' / 'Session' / 'suite2p' / 'plane0' / 'iscell.npy'
+        datapath = basepath / animal / sess / 'funcimg' / 'suite2p' / 'plane0' / 'iscell.npy'
         if not os.path.exists(datapath):
             raise FileNotFoundError('The iscell.npy file does not exist in this directory.')
         iscell = np.load(datapath)[:,0]
@@ -420,7 +465,7 @@ def align_rois(roicat_dir, roicat_data_name, sessions_to_align=None, basepath=No
         # Update UCIDs with valid cells
         iscell = [[] for s in range(len(sessions_to_align))]
         for s, sess in enumerate(sessions_to_align):
-            datapath = basepath / animal / sess / 'funcimg' / 'Session' / 'suite2p' / 'plane0' / 'iscell.npy'
+            datapath = basepath / animal / sess / 'funcimg' / 'suite2p' / 'plane0' / 'iscell.npy'
             iscell[s] = np.load(datapath)[:,0]
         
         # Apply the mask to the aligned data

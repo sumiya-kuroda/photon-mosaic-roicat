@@ -54,7 +54,6 @@ alignment:
       DISK_LightGlue:
         num_features: 3000
         threshold_confidence: 0
-        window_nms: 7
       LoFTR:
         model_type: indoor_new
         threshold_confidence: 0.2
@@ -133,7 +132,7 @@ SWT:
 similarity_graph:
   sparsification:
     n_workers: -1
-    block_height: "128_tree"
+    block_height: 128
 
 clustering:
   mixing_method: automatic

@@ -1,8 +1,6 @@
 import submitit
 from submitit.helpers import CommandFunction
-from roicat import pipelines, util, helpers, run_pipeline
 from photon_mosaic_roicat.roicat_helpers import io, tracking_helpers
-from .run_pm import run_pm
 
 def run_roicat(pipeline='tracking'):
     # Run ROICaT
@@ -19,11 +17,10 @@ def run_roicat(pipeline='tracking'):
             mem_gb=128,
             slurm_gres="gpu:1",
         )
-        dir_data, dir_save = tracking_helpers.constuct_roicat_params(config, subject)
-        job_roicat = executor_roicat.submit(run_pipeline, pipeline, str(config_path), str(dir_data), str(dir_save))
+        dir_data, dir_save = tracking_helpers.constuct_roicat_params(config=config, subject=subject)
+        job_roicat = executor_roicat.submit(tracking_helpers.run_roicat_with_monitoring, pipeline, str(config_path), str(dir_data), str(dir_save))
         print("Submitted job_id:", job_roicat.job_id)
-
-        # monitor_roicat_and_notify(job_roicat)
 
 if __name__ == '__main__':
     run_roicat()
+    
