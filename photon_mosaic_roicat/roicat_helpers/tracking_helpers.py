@@ -60,27 +60,27 @@ def run_roicat_with_monitoring(
     inplace_update_if_not_none(params['data_loading'], 'dir_outer', dir_data)
     inplace_update_if_not_none(params['results_saving'], 'dir_save', dir_save)
 
-    # try:
-    if params['data_loading']['data_kind'] == 'data_VRABCD':
-        custom_data = load_VRABCD(params)
-        # inplace_update_if_not_none(params['results_saving'], 'dir_save', 'data_suite2p') # because we use suite2p
-        results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=custom_data) # Run pipeline
+    try:
+        if params['data_loading']['data_kind'] == 'data_VRABCD':
+            custom_data = load_VRABCD(params)
+            # inplace_update_if_not_none(params['results_saving'], 'dir_save', 'data_suite2p') # because we use suite2p
+            results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=custom_data) # Run pipeline
+        else:
+            results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=None) # Run pipeline
+        msg = f"✅ ROICaT job for subject {subject} completed successfully!"
+
+        # Generate PDF report
+        is_pdfmade = generate_report.generate_roicat_report(dir_save)
+    except Exception as e:
+        msg = f"❌ ROICaT job for subject {subject} failed. Error message: {e}"
+        is_pdfmade = False
+
+    print(msg)
+    slack_bot.notify_slack(msg)
+    if is_pdfmade:
+        slack_bot.notify_slack_with_file(msg, Path(dir_save) / 'roicat_report.pdf', is_pdfmade)
     else:
-        results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=None) # Run pipeline
-    msg = f"✅ ROICaT job for subject {subject} completed successfully!"
-
-    # Generate PDF report
-    is_pdfmade = generate_report.generate_roicat_report(dir_save)
-    # except Exception as e:
-    #     msg = f"❌ ROICaT job for subject {subject} failed. Error message: {e}"
-    #     is_pdfmade = False
-
-    # print(msg)
-    # slack_bot.notify_slack(msg)
-    # if is_pdfmade:
-    #     slack_bot.notify_slack_with_file(msg, path_to_pdf, is_pdfmade)
-    # else:
-    #     slack_bot.notify_slack(msg)
+        slack_bot.notify_slack(msg)
 
 def load_VRABCD(params: dict):
     # this function load data from VR ABCD project
