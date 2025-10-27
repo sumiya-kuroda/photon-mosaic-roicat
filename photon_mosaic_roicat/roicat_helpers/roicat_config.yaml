@@ -186,5 +186,5 @@ clustering:
 
 results_saving:
   dir_save: null # Keep empty
-  prefix_name_save: null
+  prefix_name_save: roicat
   gif_frame_rate: 10.0
