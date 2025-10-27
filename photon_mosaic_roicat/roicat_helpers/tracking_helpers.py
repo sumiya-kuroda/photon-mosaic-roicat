@@ -16,9 +16,9 @@ import torch
 import datetime
 import hashlib
 
-from roicat import pipelines, util, helpers
-from photon_mosaic_roicat.slurm_helper import monitor_roicat_and_notify
+from roicat import pipelines, util, helpers, data_importing
 from photon_mosaic_roicat.notification import slack_bot
+from photon_mosaic_roicat.roicat_helpers import io, tracking_helpers
 
 PIPELINES = {
     'tracking': pipelines.pipeline_tracking,
@@ -38,7 +38,8 @@ def run_roicat_with_monitoring(
     pipeline_name: str = 'tracking',
     path_params: str = '',
     dir_data: str = '',
-    dir_save: str = ''
+    dir_save: str = '',
+    subject:str = ''
 ):
     """
     Call a pipeline with the specified parameters.
@@ -47,7 +48,7 @@ def run_roicat_with_monitoring(
     # Load in parameters to use
     if path_params is not None:
         params = helpers.yaml_load(path_params)
-        params.pop("processed_data_base", None)
+        params.pop("processed_data_base", None) # Because this is specific to this pipeline
     else:
         print(f"WARNING: No parameters file specified. Using default parameters for pipeline '{pipeline_name}'")
         params = {}
@@ -62,14 +63,56 @@ def run_roicat_with_monitoring(
             d[key] = value
     inplace_update_if_not_none(params['data_loading'], 'dir_outer', dir_data)
     inplace_update_if_not_none(params['results_saving'], 'dir_save', dir_save)
-    # inplace_update_if_not_none(params['results_saving'], 'prefix_name_save', prefix_name_save)
-    # inplace_update_if_not_none(params['general'], 'verbose', verbose)
 
-    # Run pipeline
-    results, run_data, params = PIPELINES[pipeline_name](params=params)
+    if params['data_loading']['data_kind'] == 'data_VRABCD':
+        custom_data = load_VRABCD(params)
+        # inplace_update_if_not_none(params['results_saving'], 'dir_save', 'data_suite2p') # because we use suite2p
+        results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=custom_data) # Run pipeline
+    else:
+        results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=None) # Run pipeline
 
     # When the job is done, send notification to Slack
-    # monitor_roicat_and_notify
+    msg = f"✅ ROICaT job for subject {subject} completed successfully!"
+    print(results)
+    print(msg)
+    slack_bot.notify_slack(msg)
+
+def load_VRABCD(params: dict):
+    # this function load data from VR ABCD project
+    
+    paths_allStat = helpers.find_paths(
+        dir_outer=params['data_loading']['dir_outer'],
+        reMatch='stat.npy',
+        reMatch_in_path=params['data_loading']['reMatch_in_path'],
+        depth=6,
+        find_files=True,
+        find_folders=False,
+        natsorted=True,
+    )[:]
+    paths_allOps = [str(Path(path).resolve().parent / 'ops.npy') for path in paths_allStat][:]
+
+    if len(paths_allStat) == 0:
+        raise FileNotFoundError(f"No stat.npy files found in '{params['data_loading']['dir_outer']}'")
+    
+    # Sort suite2p data based on session ids
+    paths_allStat = io.natsort_by_sesids(paths_allStat)
+    paths_allOps = io.natsort_by_sesids(paths_allOps)
+
+    print(f"Found the following stat.npy files:")
+    [print(f"    {path}") for path in paths_allStat]
+    print(f"Found the following corresponding ops.npy files:")
+    [print(f"    {path}") for path in paths_allOps]
+
+    ## Import data
+    data = data_importing.Data_suite2p(
+        paths_statFiles=paths_allStat[:],
+        paths_opsFiles=paths_allOps[:],
+        verbose=params['general']['verbose'],
+        **{**params['data_loading']['common'], **params['data_loading']['data_suite2p']},
+    )
+    assert data.check_completeness(verbose=False)['tracking'], f"Data object is missing attributes necessary for tracking."
+
+    return data
 
 def load_neural_data(basepath, animal, sessions_to_align, data_type='F'):
     # Load neural data 

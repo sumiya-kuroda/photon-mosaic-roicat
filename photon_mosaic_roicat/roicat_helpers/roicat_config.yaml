@@ -14,8 +14,8 @@ general:
   random_seed: null
 
 data_loading:
-  data_kind: data_suite2p
-  dir_outer: null
+  data_kind: data_VRABCD
+  dir_outer: null # Keep empty
   reMatch_in_path: null
   common:
     um_per_pixel: 1.3523
@@ -23,7 +23,7 @@ data_loading:
     out_height_width: [36, 36]
   data_suite2p:
     new_or_old_suite2p: new
-    type_meanImg: meanImgE
+    type_meanImg: meanImg #meanImgE
   data_roicat:
     filename_search: data_roicat.richfile
 
@@ -186,5 +186,5 @@ clustering:
 
 results_saving:
   dir_save: null # Keep empty
-  prefix_name_save: "Sumiya"
+  prefix_name_save: null
   gif_frame_rate: 10.0

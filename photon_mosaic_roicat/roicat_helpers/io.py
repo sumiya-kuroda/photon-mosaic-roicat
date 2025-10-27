@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 import yaml
 import re
+from natsort import natsorted
+import re
 
 # Adapted from photon-mosaic
 def ensure_default_config(reset_config=False):
@@ -191,3 +193,21 @@ def get_subject_path(config=None, processed_data_base=None, pattern='sub-'):
     ]
 
     return candidate_datasets
+
+def natsort_by_sesids(paths):
+    """
+    Sorts a list of file paths by the last three characters of the session ID
+    that follows 'ses-' using natural sorting.
+    
+    Example session IDs:
+        ses-1LM007  -> uses '007'
+        ses-grey002 -> uses '002'
+    """
+    def ses_key(path):
+        match = re.search(r"ses-([^_/]+)", path)
+        if match:
+            session_id = match.group(1)
+            return session_id[-3:]  # take last 3 characters
+        return ""
+    
+    return natsorted(paths, key=ses_key)
