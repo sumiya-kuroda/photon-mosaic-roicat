@@ -20,11 +20,18 @@ pip install -e.
 ```
 
 ## Daily usage
+The code depends on whether you have organized your preprocessed data in a photon-mosaic friendly manner.
 
 When running only photon-mosaic
 ```sh
 cd slurm_jobs
 sbatch run_pm.sh
+```
+
+When running ROICaT
+```sh
+cd slurm_jobs
+sbatch run_roicat.sh
 ```
 
 When running photon-mosaic + ROICaT

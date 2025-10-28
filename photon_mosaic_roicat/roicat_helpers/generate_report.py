@@ -48,6 +48,7 @@ def generate_roicat_report(dir_save:str = '', saving_pdf_location:str='roicat_re
     pdf.add_reporttxt(f"n_sessions: {results_all["ROIs"]["n_sessions"]}", base_y = 75)
     pdf.add_reporttxt(f'Number of clusters: {len(np.unique(results_clusters["labels"]))}', base_y = 80)
     pdf.add_reporttxt(f'Number of discarded ROIs: {(np.array(results_clusters["labels"])==-1).sum()}', base_y = 85)
+    pdf.image(Path(dir_save) / 'visualization' / 'tracked_cells.png', h=75, w=105, x=10, y=90) # 5,7
 
     for i, ses in enumerate(paths_s2p):
         path_to_roiimage = Path(dir_save) / 'visualization' / 'ROIs_aligned' / f'ROIs_aligned_{i}.png'
@@ -65,3 +66,6 @@ def generate_roicat_report(dir_save:str = '', saving_pdf_location:str='roicat_re
         pdf.image(path_to_roiimage, h=40, w=40, x=10, y=120) 
 
     pdf.output(Path(dir_save) / saving_pdf_location)
+
+if __name__ == '__main__':
+    generate_roicat_report('/ceph/mrsic_flogel/public/projects/SuKuSaRe_20250923_HFScohort3/roicat_testing/derivatives/sub-011/funcimg_tracked')
