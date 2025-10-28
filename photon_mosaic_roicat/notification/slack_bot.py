@@ -84,5 +84,30 @@ def notify_slack_with_file(msg=None, filepath=None, channel_id=None):
         initial_comment=msg
     )
 
+
+def notify_slack_with_file_many(msg=None, filepaths: list =None, channel_id=None):
+    if msg is None:
+        raise ValueError('Specify message!')
+    if filepaths is None:
+        raise ValueError('Specify file!')  
+    configs = load_and_process_config()
+    client = get_slack_client(configs=configs)
+    if channel_id is None:
+        channel_id = configs["channel_id"]
+    print("Sending notification to Slack ...")
+    msg_resp = client.chat_postMessage(
+        channel=channel_id, text=msg, unfurl_links=False
+    )
+
+    thread_ts = msg_resp["ts"]  # timestamp of the root message
+
+    for filepath in filepaths:
+        client.files_upload_v2(
+            channel=channel_id,
+            thread_ts=thread_ts,   # thread ID
+            file=filepath,
+            filename=os.path.basename(filepath),
+        )
+
 if __name__ == '__main__':
     test_write()

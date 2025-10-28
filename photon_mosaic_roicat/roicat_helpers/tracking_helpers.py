@@ -67,18 +67,20 @@ def run_roicat_with_monitoring(
             results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=custom_data) # Run pipeline
         else:
             results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=None) # Run pipeline
-        msg = f"✅ ROICaT job for subject {subject} completed successfully!"
+        msg = f"✅ ROICaT job for 🐭 subject {subject} completed successfully! See attached reports."
 
         # Generate PDF report
-        is_pdfmade = generate_report.generate_roicat_report(dir_save)
+        generate_report.generate_roicat_report(dir_save)
+        is_pdfmade = True
     except Exception as e:
         msg = f"❌ ROICaT job for subject {subject} failed. Error message: {e}"
         is_pdfmade = False
 
     print(msg)
-    slack_bot.notify_slack(msg)
     if is_pdfmade:
-        slack_bot.notify_slack_with_file(msg, Path(dir_save) / 'roicat_report.pdf', is_pdfmade)
+        slack_bot.notify_slack_with_file_many(msg, [Path(dir_save) / 'roicat_report.pdf', Path(dir_save) / 'visualization' / 'FOV_clusters.gif'])
+        # slack_bot.notify_slack_with_file(msg, Path(dir_save) / 'roicat_report.pdf')
+
     else:
         slack_bot.notify_slack(msg)
 

@@ -211,3 +211,19 @@ def natsort_by_sesids(paths):
         return ""
     
     return natsorted(paths, key=ses_key)
+
+def extract_neuroblueprint_from_roicat(results_all: dict):
+    paths_stat = results_all["input_data"]["paths_stat"]
+    subject = get_subjectid(paths_stat[0])
+
+    paths_s2p = []
+    for path_stat in paths_stat:
+        path_s2p = Path(path_stat).parent.parent.parent.parent
+        paths_s2p.append(path_s2p)
+
+    return subject, paths_s2p
+
+def get_subjectid(path:str):
+    m = re.search(r'(?<=/)sub-[A-Za-z0-9]+(?=/)', path)
+    subject = m.group(0) if m else None
+    return subject

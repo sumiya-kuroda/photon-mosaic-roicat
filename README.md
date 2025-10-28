@@ -15,7 +15,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install git+https://github.com/neuroinformatics-unit/swc-slack # it works well with any Slack
 
 # Install other dependencies
-pip install submitit
+pip install submitit fpdf2
 pip install -e.
 ```
 
