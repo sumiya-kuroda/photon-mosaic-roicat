@@ -256,3 +256,9 @@ def plot_cell_tracking(idx_original_aligned: np.array,
 
     if saving_file_location is not None:
         fig.savefig(saving_file_location)
+
+
+if __name__ == '__main__':
+    dir_save = '/ceph/mrsic_flogel/public/projects/SuKuSaRe_20250923_HFScohort3/preprocessed_Oct2025v3/derivatives/sub-005/funcimg_tracked'
+    _, idx_original_aligned = align_rois(str(dir_save), 'roicat_aligned_ROIs.npy')
+    plot_cell_tracking(idx_original_aligned, Path(dir_save) / 'visualization' / 'tracked_cells.png')

@@ -68,4 +68,5 @@ def generate_roicat_report(dir_save:str = '', saving_pdf_location:str='roicat_re
     pdf.output(Path(dir_save) / saving_pdf_location)
 
 if __name__ == '__main__':
-    generate_roicat_report('/ceph/mrsic_flogel/public/projects/SuKuSaRe_20250923_HFScohort3/roicat_testing/derivatives/sub-011/funcimg_tracked')
+    dir_save = '/ceph/mrsic_flogel/public/projects/SuKuSaRe_20250923_HFScohort3/preprocessed_Oct2025v3/derivatives/sub-005/funcimg_tracked'
+    generate_roicat_report(dir_save)

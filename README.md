@@ -6,7 +6,7 @@ This is an enxtension for [photon-mosaic](https://github.com/neuroinformatics-un
 conda activate photon-mosaic-dev # We will use the same env as photon-mosaic
 
 # ROICaT
-pip install roicat[all]
+pip install git+https://github.com/RichieHakim/ROICaT.git
 pip install git+https://github.com/RichieHakim/roiextractors
 pip uninstall torch # because roicat installation will install non-CUDA version of PyTorch
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
