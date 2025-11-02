@@ -12,7 +12,7 @@ def run_roicat(pipeline='tracking', after_this_job:submitit.Job =None):
         executor_roicat = submitit.AutoExecutor(folder="../.submitit")
         if after_this_job is None:
             executor_roicat.update_parameters(
-                slurm_partition="gpu_lowp",
+                slurm_partition="gpu",
                 slurm_job_name="roicat",
                 slurm_time="4:00:00",
                 mem_gb=128,
@@ -20,7 +20,7 @@ def run_roicat(pipeline='tracking', after_this_job:submitit.Job =None):
             )
         else:
             executor_roicat.update_parameters(
-                slurm_partition="gpu_lowp",
+                slurm_partition="gpu",
                 slurm_job_name="roicat",
                 slurm_time="4:00:00",
                 mem_gb=128,
