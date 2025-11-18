@@ -7,6 +7,8 @@ from roicat import pipelines, util, helpers, data_importing, visualization
 from photon_mosaic_roicat.notification import slack_bot
 from photon_mosaic_roicat.roicat_helpers import io, generate_report
 
+os.environ['OPENBLAS_NUM_THREADS'] = '64'
+
 PIPELINES = {
     'tracking': pipelines.pipeline_tracking,
 }
@@ -78,7 +80,7 @@ def run_roicat_with_monitoring(
     else:
         slack_bot.notify_slack(msg)
 
-def load_VRABCD(params: dict):
+def load_VRABCD(params: dict, sort_by: str='id'):
     # this function load data from VR ABCD project
     
     paths_allStat = helpers.find_paths(
@@ -96,9 +98,12 @@ def load_VRABCD(params: dict):
         raise FileNotFoundError(f"No stat.npy files found in '{params['data_loading']['dir_outer']}'")
     
     # Sort suite2p data based on session ids
-    paths_allStat = io.natsort_by_sesids(paths_allStat)
-    paths_allOps = io.natsort_by_sesids(paths_allOps)
-
+    if sort_by is 'ses':
+        paths_allStat = io.natsort_by_sesids(paths_allStat)
+        paths_allOps = io.natsort_by_sesids(paths_allOps)
+    elif sort_by is 'id':
+        paths_allStat = io.natsort_by_ids(paths_allStat)
+        paths_allOps = io.natsort_by_ids(paths_allOps)
     print(f"Found the following stat.npy files:")
     [print(f"    {path}") for path in paths_allStat]
     print(f"Found the following corresponding ops.npy files:")
@@ -198,9 +203,9 @@ def load_neural_data(ses_dirs: list, data_type='F'):
         if data_type == 'F':
             datapath = sess / 'funcimg' / 'suite2p' / 'plane0' / 'F.npy'
         elif data_type == 'DF_F0':
-            datapath = sess / 'funcimg' / 'suite2p' / 'plane0' / 'DF_F0.npy'
+            datapath = sess / 'funcimg' / 'dff' / 'plane0' / 'dFF.npy'
             if not os.path.exists(datapath):
-                raise FileNotFoundError('The DF_F0.npy file does not exist in this directory.')
+                raise FileNotFoundError('The dFF.npy file does not exist in this directory.')
         else:
             raise KeyError('This is not a valid data format for ROI alignment.')
         data[s] = np.load(datapath)

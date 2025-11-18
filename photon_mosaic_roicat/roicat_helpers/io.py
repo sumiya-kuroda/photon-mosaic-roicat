@@ -212,6 +212,24 @@ def natsort_by_sesids(paths):
     
     return natsorted(paths, key=ses_key)
 
+def natsort_by_ids(paths):
+    """
+    Sorts a list of file paths by the last three characters of the session ID
+    that follows 'id-' using natural sorting.
+    
+    Example session IDs:
+        id-1LM007  -> uses '007'
+        id-grey002 -> uses '002'
+    """
+    def ses_key(path):
+        match = re.search(r"id-([^_/]+)", path)
+        if match:
+            session_id = match.group(1)
+            return session_id[-3:]  # take last 3 characters
+        return ""
+    
+    return natsorted(paths, key=ses_key)
+
 def extract_neuroblueprint_from_roicat(results_all: dict):
     paths_stat = results_all["input_data"]["paths_stat"]
     subject = get_subjectid(paths_stat[0])
