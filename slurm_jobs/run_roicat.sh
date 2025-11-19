@@ -13,7 +13,9 @@ echo "SLURM job info:"
 scontrol show job $SLURM_JOB_ID
 
 export PYTHONUNBUFFERED=1
-export OMP_NUM_THREADS=4
+export OPENBLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
 
 module load miniconda
 conda activate photon-mosaic-dev

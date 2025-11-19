@@ -25,6 +25,10 @@ def run_roicat(pipeline='tracking', after_this_job:submitit.Job =None):
                 slurm_time="4:00:00",
                 mem_gb=128,
                 slurm_gres="gpu:1",
+                cpus_per_task=4,
+                cpus_per_gpu=4,
+                slurm_requeue=True,
+                slurm_max_num_timeout=3,   # If Slurm decides job failed
                 slurm_additional_parameters={
                     "dependency": f"afterok:{str(after_this_job.job_id)}",
                 },

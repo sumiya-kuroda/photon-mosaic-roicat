@@ -7,8 +7,6 @@ from roicat import pipelines, util, helpers, data_importing, visualization
 from photon_mosaic_roicat.notification import slack_bot
 from photon_mosaic_roicat.roicat_helpers import io, generate_report
 
-os.environ['OPENBLAS_NUM_THREADS'] = '64'
-
 PIPELINES = {
     'tracking': pipelines.pipeline_tracking,
 }
@@ -55,7 +53,7 @@ def run_roicat_with_monitoring(
 
     try:
         if params['data_loading']['data_kind'] == 'data_VRABCD':
-            custom_data = load_VRABCD(params)
+            custom_data = load_VRABCD(params, sort_by='id')
             # inplace_update_if_not_none(params['results_saving'], 'dir_save', 'data_suite2p') # because we use suite2p
             results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=custom_data) # Run pipeline
         else:
@@ -71,6 +69,7 @@ def run_roicat_with_monitoring(
     except Exception as e:
         msg = f"❌ ROICaT job for subject {subject} failed. Error message: {e}"
         is_pdfmade = False
+        raise
 
     print(msg)
     if is_pdfmade:
@@ -104,6 +103,9 @@ def load_VRABCD(params: dict, sort_by: str='id'):
     elif sort_by is 'id':
         paths_allStat = io.natsort_by_ids(paths_allStat)
         paths_allOps = io.natsort_by_ids(paths_allOps)
+    else:
+        raise NotImplementedError
+    
     print(f"Found the following stat.npy files:")
     [print(f"    {path}") for path in paths_allStat]
     print(f"Found the following corresponding ops.npy files:")
