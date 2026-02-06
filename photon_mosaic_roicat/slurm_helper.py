@@ -19,3 +19,18 @@ def monitor_pm_and_notify(job: submitit.Job, interval=30):
 
     print(msg)
     slack_bot.notify_slack(msg)
+
+def monitor_roicat_and_notify(job: submitit.Job, interval=30):
+    print(f"Start monitoring job {job.job_id} ...")
+    while not job.done():
+        print(f"Still running...")
+        time.sleep(interval)
+
+    with open(job.paths.stdout, "r") as f:
+        lines = f.readlines()
+        last_line = lines[-1].strip() if lines else None
+
+    if "after successful completion" in last_line:
+        msg = f"All ROICaT jobs are done!"
+        print(msg)
+        slack_bot.notify_slack(msg)

@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 from roicat import pipelines, util, helpers, data_importing, visualization
 from photon_mosaic_roicat.notification import slack_bot
@@ -26,7 +27,9 @@ def run_roicat_with_monitoring(
     path_params: str = '',
     dir_data: str = '',
     dir_save: str = '',
-    subject:str = ''
+    subject:str = '',
+    max_retries: int = 3,
+    retry_delay_seconds: int = 600,
 ):
     """
     Call a pipeline with the specified parameters.
@@ -51,31 +54,23 @@ def run_roicat_with_monitoring(
     inplace_update_if_not_none(params['data_loading'], 'dir_outer', dir_data)
     inplace_update_if_not_none(params['results_saving'], 'dir_save', dir_save)
 
-    try:
-        if params['data_loading']['data_kind'] == 'data_VRABCD':
-            custom_data = load_VRABCD(params, sort_by='id')
-            # inplace_update_if_not_none(params['results_saving'], 'dir_save', 'data_suite2p') # because we use suite2p
-            results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=custom_data) # Run pipeline
-        else:
-            results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=None) # Run pipeline
+    if params['data_loading']['data_kind'] == 'data_VRABCD':
+        custom_data = load_VRABCD(params, sort_by='id')
+        # inplace_update_if_not_none(params['results_saving'], 'dir_save', 'data_suite2p') # because we use suite2p
+        results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=custom_data) # Run pipeline
+    else:
+        results, run_data, params = PIPELINES[pipeline_name](params=params, custom_data=None) # Run pipeline
 
-        _, idx_original_aligned = align_rois(str(dir_save), 'roicat_aligned_ROIs.npy')
-        plot_cell_tracking(idx_original_aligned, Path(dir_save) / 'visualization' / 'tracked_cells.png')
-        msg = f"✅ ROICaT job for 🐭 subject {subject} completed successfully! See attached reports."
+    _, idx_original_aligned = align_rois(str(dir_save), 'roicat_aligned_ROIs.npy', force_reload=True)
+    plot_cell_tracking(idx_original_aligned, Path(dir_save) / 'visualization' / 'tracked_cells.png')
+    msg = f"✅ ROICaT job for 🐭 subject {subject} completed successfully! See attached reports."
 
-        # Generate PDF report
-        generate_report.generate_roicat_report(dir_save)
-        is_pdfmade = True
-    except Exception as e:
-        msg = f"❌ ROICaT job for subject {subject} failed. Error message: {e}"
-        is_pdfmade = False
-        raise
-
+    # Generate PDF report
+    generate_report.generate_roicat_report(dir_save)
+    is_pdfmade = True
     print(msg)
     if is_pdfmade:
         slack_bot.notify_slack_with_file_many(msg, [Path(dir_save) / 'roicat_report.pdf', Path(dir_save) / 'visualization' / 'FOV_clusters.gif'])
-        # slack_bot.notify_slack_with_file(msg, Path(dir_save) / 'roicat_report.pdf')
-
     else:
         slack_bot.notify_slack(msg)
 
@@ -97,10 +92,10 @@ def load_VRABCD(params: dict, sort_by: str='id'):
         raise FileNotFoundError(f"No stat.npy files found in '{params['data_loading']['dir_outer']}'")
     
     # Sort suite2p data based on session ids
-    if sort_by is 'ses':
+    if sort_by == 'ses':
         paths_allStat = io.natsort_by_sesids(paths_allStat)
         paths_allOps = io.natsort_by_sesids(paths_allOps)
-    elif sort_by is 'id':
+    elif sort_by == 'id':
         paths_allStat = io.natsort_by_ids(paths_allStat)
         paths_allOps = io.natsort_by_ids(paths_allOps)
     else:
@@ -267,5 +262,5 @@ def plot_cell_tracking(idx_original_aligned: np.array,
 
 if __name__ == '__main__':
     dir_save = '/ceph/mrsic_flogel/public/projects/SuKuSaRe_20250923_HFScohort3/preprocessed_Oct2025v3/derivatives/sub-005/funcimg_tracked'
-    _, idx_original_aligned = align_rois(str(dir_save), 'roicat_aligned_ROIs.npy')
+    _, idx_original_aligned = align_rois(str(dir_save), 'roicat_aligned_ROIs.npy', force_reload=True)
     plot_cell_tracking(idx_original_aligned, Path(dir_save) / 'visualization' / 'tracked_cells.png')
