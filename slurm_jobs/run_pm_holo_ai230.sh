@@ -17,4 +17,4 @@ export PYTHONUNBUFFERED=1
 module load miniconda
 conda activate photon-mosaic-dev
 
-srun python ./run_pm_visual.py
+srun python ./run_pm_holo_ai230.py

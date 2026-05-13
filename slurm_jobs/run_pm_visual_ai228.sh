@@ -5,6 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --time=72:00:00
 #SBATCH --mem=4G
+#SBATCH --partition=gpu_lowp
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=s.kuroda@ucl.ac.uk
 
@@ -17,4 +18,4 @@ export PYTHONUNBUFFERED=1
 module load miniconda
 conda activate photon-mosaic-dev
 
-srun python ./run_pm_holo_np1.py
+srun python ./run_pm_visual_ai228.py
